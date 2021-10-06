@@ -11,9 +11,6 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 // Debug
 //const gui = new dat.GUI()
 
-/**
- * Base
- */
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
@@ -23,20 +20,39 @@ const scene = new THREE.Scene()
 /**
  * Models
  */
- const dracoLoader = new DRACOLoader()
- dracoLoader.setDecoderPath('/draco/')
- 
- const gltfLoader = new GLTFLoader()
- gltfLoader.setDRACOLoader(dracoLoader)
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('/draco/')
 
- gltfLoader.load(
-    //'/models/Fox/glTF/Fox.gltf',
-    '/static/folio.gltf',
+const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(dracoLoader)
+
+let mixer = null
+
+gltfLoader.load(
+    // '/models/Fox/glTF/Fox.gltf',
+    '/walking.gltf',
     (gltf) =>
     {
         console.log(gltf)
         
+        //scene.add(gltf.scene)
+        //gltf.scene.remove(gltf.scene.children[2])
+
+        // //---- Light-----
+        // console.log(gltf.scene.children[2].position)
+        // const lig = gltf.scene.children[2].position.set(-74, -104, 24)
+        // //scene.add(lig)
+        // console.log(gltf.scene.children[2].position)
+        // console.log(gltf.scene.children[2].rotation)
+        // //const rot = 
+        // gltf.scene.children[2].rotation.set(-157, 246, -95)
+        // console.log(gltf.scene.children[2].rotation)
         scene.add(gltf.scene)
+        // console.log(gltf)
+        // //scene.add(rot)
+
+        //--- light end ----
+
         // //scene.add(gltf.scene.children[0])
         // const bakedMesh =gltf.scene.children[4]
         // const textureLoader = new THREE.TextureLoader()
@@ -44,20 +60,63 @@ const scene = new THREE.Scene()
         // const bake = new THREE.MeshBasicMaterial({map: baked})
         // //scene.add(bake)
 
-        // bakedMesh.material = bake
+        //bakedMesh.material = bake
 
-        // gltf.scene.scale.set(0.025,0.025, 0.025)
-        // //scene.add(gltf.cameras[0])
-        // // while (gltf.scene.children.lengh){
-        // //     scene.add(gltf.scene.children[0])
-        // // }
+        //gltf.scene.scale.set(0.025,0.025, 0.025)
+        //scene.add(gltf.cameras[0])
+        // while (gltf.scene.children.lengh){
+        //     scene.add(gltf.scene.children[0])
+        // }
 
-        // // Animation
-        // // mixer = new THREE.AnimationMixer(gltf.scene)
-        // // const action = mixer.clipAction(gltf.animations[2])
-        // // action.play()
+        // Animation
+        mixer = new THREE.AnimationMixer(gltf.scene)
+        const action = mixer.clipAction(gltf.animations[0])
+        action.play()
     }
 )
+//const baked = new THREE.MeshBasicMaterial({map: /models/path/Heightmap.tif})
+// const textureLoader = new THREE.TextureLoader()
+// const baked = textureLoader.load('/models/bake.jpg')
+// const bake = new THREE.MeshBasicMaterial({map: baked})
+// scene.add(bake)
+/**
+ * Floor
+ */
+const floor = new THREE.Mesh(
+    new THREE.PlaneBufferGeometry(10, 10),
+    new THREE.MeshStandardMaterial({
+        color: '#444444',
+        metalness: 0,
+        roughness: 0.5
+    })
+)
+floor.receiveShadow = true
+floor.rotation.x = - Math.PI * 0.5
+scene.add(floor)
+
+/**
+ * Lights
+ */
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
+scene.add(ambientLight)
+
+// const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+// scene.add( light );
+
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
+// // directionalLight.castShadow = true
+// // directionalLight.shadow.mapSize.set(1024, 1024)
+// // directionalLight.shadow.camera.far = 15
+// // directionalLight.shadow.camera.left = - 7
+// // directionalLight.shadow.camera.top = 7
+// // directionalLight.shadow.camera.right = 7
+// // directionalLight.shadow.camera.bottom = - 7
+// directionalLight.position.set(-74, -104, 24)
+// scene.add(directionalLight)
+
+
+
+
 
 /**
  * Sizes
@@ -85,89 +144,28 @@ window.addEventListener('resize', () =>
 /**
  * Camera
  */
+
+ 
+
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.x = 3
-camera.position.y = 3
-camera.position.z = 3
+camera.position.set(3, 12, 3)
+//camera.scale(1,1,1)
 scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
+controls.target.set(0, 0.75, 0)
 controls.enableDamping = true
-
-
-
-/**
- * Cube
- */
-// const cube = new THREE.Mesh(
-//     new THREE.BoxGeometry(1, 1, 1),
-//     new THREE.MeshBasicMaterial({ color: 0xff0000 })
-// )
-// scene.add(cube)
-
-//Texture loader
-const loader = new THREE.TextureLoader()
-const height = loader.load('/bakeinvert.jpeg')
-const Theight = loader.load('/height.jpeg')
-const texture = loader.load('/bake.jpg')
-const ttexture = loader.load('/Texture_mask_rock.jpg')
-const normal = loader.load('/mask_mix_map.jpg')
-const color = loader.load('/mask_grass_map1.jpg')
-const roughness = loader.load('/grass.jpeg')
-const alpha = loader.load('/mask_path.jpg')
-
-const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    displacementMap: ttexture,
-    displacementScale: .25,
-    normalMap: texture,
-    alphaMap: alpha
-    //colorMap: height,
-    //roughnessMap: roughness
-    //displacementBias: 0.8
-})
-
-//Plane
-const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(3, 3, 64, 64), material
-    //new THREE.MeshBasicMaterial({color: 0x00ff00})
-)
-// const textureLoader = new THREE.TextureLoader()
-// const baked = textureLoader.load('/bake.jpg')
-// const bake = new THREE.MeshBasicMaterial({map: baked})
-
-// const material = new THREE.MeshStandardMaterial()
-
-// const displacementMap = new THREE.TextureLoader().load(
-//     '/mask_grass_map1.jpg'
-// )
-// material.displacementMap = displacementMap
-
-// const baker = new THREE.MeshStandardMaterial({map: displacementMap})
-
-//const plane: THREE.Mesh = new THREE.Mesh(planeGeometry, material)
-scene.add(plane)
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8)
-scene.add(ambientLight)
-
-
-plane.rotation.x = - Math.PI * 0.5
-
-// plane.material = baker
-// plane.material = bake
-scene.add(plane)
-plane.position.set(0,0,0)
 
 /**
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true,
+    canvas: canvas
 })
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
@@ -175,21 +173,25 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Animate
  */
 const clock = new THREE.Clock()
-let lastElapsedTime = 0
+let previousTime = 0
 
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
-    const deltaTime = elapsedTime - lastElapsedTime
-    lastElapsedTime = elapsedTime
+    const deltaTime = elapsedTime - previousTime
+    previousTime = elapsedTime
+
+    // Model animation
+    if(mixer)
+    {
+        mixer.update(deltaTime)
+    }
 
     // Update controls
     controls.update()
 
     // Render
     renderer.render(scene, camera)
-
-    console.log("Testing")
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
